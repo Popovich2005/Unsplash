@@ -8,7 +8,7 @@
 import UIKit
 
 final class FavoritesVC: UIViewController {
-
+    
     private var photos: [DetailsPhotoModel] = []
     
     private let tableView: UITableView = {
@@ -37,7 +37,10 @@ extension FavoritesVC {
     
     private func setupTableView() {
         tableView.frame = view.bounds
-        tableView.register(FavoritePhotoCell.self, forCellReuseIdentifier: FavoritePhotoCell.identifier)
+        tableView.register(
+            FavoritePhotoCell.self,
+            forCellReuseIdentifier: FavoritePhotoCell.identifier
+        )
         view.addSubview(tableView)
         
         tableView.delegate = self
@@ -67,7 +70,7 @@ extension FavoritesVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        120
+        100
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

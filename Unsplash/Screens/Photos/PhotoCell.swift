@@ -11,11 +11,10 @@ final class PhotoCell: UICollectionViewCell {
     
     static let identifier = "PhotoCell"
     
+    private let imageView: UIImageView = UIImageView()
+
     private var currentImageURL: String?
 
-    
-    private let imageView: UIImageView = UIImageView()
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupImageView()

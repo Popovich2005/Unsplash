@@ -6,12 +6,6 @@
 //
 
 import Foundation
-enum ServiceError: Error {
-    case urlError
-    case serverError
-    case notData
-    case decodeError
-}
 
 enum NetworkError: String, Error {
     case unableToComplete = "Unable to complete request. Please check your internet connection."
@@ -21,13 +15,8 @@ enum NetworkError: String, Error {
 
 final class NetworkService {
     
-    private let baseURL = "https://api.unsplash.com/"
-
-
-    
     private let session: URLSession
     private let apiKey = "5jlAU8eaPloXwSv-pZZWSbfS6QKoMd_ThmWOoKVsuTg"
-//    private let apiKey = "abJkwyDqWWX7I4GyOYr7ZJTyy2VVIfTNr7llbfipywg"
     private let item = 30
     
     private var components = URLComponents()
@@ -47,22 +36,20 @@ final class NetworkService {
     }
     
     
-    func fetchPhotos(completion: @escaping (Result<[PhotoModel], ServiceError>) -> Void) {
+    func fetchPhotos(completion: @escaping (Result<[PhotoModel], NetworkError>) -> Void) {
         let path = "/photos/random"
         let parameters: [String:String] = ["count": "\(item)", "client_id": "\(apiKey)"]
         guard let url = fetchURL(path: path, parameters: parameters) else { return }
         let request = URLRequest(url: url)
         
         let task = session.dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion(.failure(.serverError))
-                debugPrint(String(describing: error))
+            if let _ = error {
+                completion(.failure(.unableToComplete))
                 return
             }
             
             guard let data = data else {
-                completion(.failure(.notData))
-                debugPrint(String(describing: error))
+                completion(.failure(.invalidData))
                 return
             }
             
@@ -70,23 +57,20 @@ final class NetworkService {
                 let result = try JSONDecoder().decode([PhotoModel].self, from: data)
                 completion(.success(result))
             } catch {
-                completion(.failure(.decodeError))
-                debugPrint("Failed to decode...")
+                completion(.failure(.invalidResponse))
             }
         }
         
         task.resume()
     }
     
-
-    
-    func fetchSearchPhoto(query: String, page: Int = 1, perPage: Int = 30 , completion: @escaping (Result<[PhotoModel], ServiceError>) -> Void) {
+    func fetchSearchPhoto(query: String, page: Int = 1, perPage: Int = 30 , completion: @escaping (Result<[PhotoModel], NetworkError>) -> Void) {
         let path = "/search/photos"
         let parameters: [String: String] = [
             "query": query,
             "client_id": apiKey,
-            "page": "\(page)",       // добавляем параметры для пагинации
-            "per_page": "\(perPage)" // количество изображений на странице
+            "page": "\(page)",
+            "per_page": "\(perPage)"
         ]
         
         guard let url = fetchURL(path: path, parameters: parameters) else { return }
@@ -94,14 +78,12 @@ final class NetworkService {
         let request = URLRequest(url: url)
         let task = session.dataTask(with: request) { data, response, error in
             if let _ = error {
-                completion(.failure(.serverError))
-                debugPrint(String(describing: error))
+                completion(.failure(.unableToComplete))
                 return
             }
             
             guard let data = data else {
-                completion(.failure(.notData))
-                debugPrint(String(describing: error))
+                completion(.failure(.invalidData))
                 return
             }
             
@@ -109,11 +91,9 @@ final class NetworkService {
                 let result = try JSONDecoder().decode(ResultsPhotosModel.self, from: data)
                 completion(.success(result.results ?? []))
             } catch {
-                completion(.failure(.decodeError))
-                debugPrint("Failed to decode...")
+                completion(.failure(.invalidResponse))
             }
         }
-        
         task.resume()
     }
 }

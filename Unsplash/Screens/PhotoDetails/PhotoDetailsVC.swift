@@ -12,16 +12,14 @@ final class PhotoDetailsVC: UIViewController {
     var photoModel: DetailsPhotoModel
     var isfavorite = false
     
-    lazy var scrollView: UIScrollView = makeScrollView()
-    lazy var authorNameLabel: UILabel = makeAuthorNameLabel()
-    lazy var shadowView: UIView = makeShadowView()
-    lazy var imageView: UIImageView = makeImageView()
-    lazy var dateLabel: UILabel = makeDateLabel()
-    lazy var locationLabel: UILabel = makeLocationLabel()
-    lazy var downloadsLabel: UILabel = makeDownloadsLabel()
-    lazy var likeButton: UIButton = makeLikeButton()
-//    lazy var infoLabel: UILabel = makeInfoLabel()
-//    lazy var labelDate: UILabel = labelDateText()
+    lazy var scrollView: UIScrollView = setupScrollView()
+    lazy var authorNameLabel: UILabel = setupAuthorNameLabel()
+    lazy var shadowView: UIView = setupShadowView()
+    lazy var imageView: UIImageView = setupImageView()
+    lazy var dateLabel: UILabel = setupDateLabel()
+    lazy var locationLabel: UILabel = setupLocationLabel()
+    lazy var downloadsLabel: UILabel = setupDownloadsLabel()
+    lazy var likeButton: UIButton = setupButton()
     
     init(photoModel: DetailsPhotoModel) {
         self.photoModel = photoModel
@@ -40,7 +38,6 @@ final class PhotoDetailsVC: UIViewController {
         setupLikeButton()
         setupViews()
         configure()
-//        setupSaveGesture()
         
         
     }
@@ -62,7 +59,7 @@ final class PhotoDetailsVC: UIViewController {
         isfavorite ? Favorites.shared.add(photo: photoModel) : Favorites.shared.delete(photo: photoModel)
         
         showFavoriteStatusAlert()
-
+        
     }
     
     private func setupBackButton() {
@@ -75,27 +72,24 @@ final class PhotoDetailsVC: UIViewController {
     
     private func setupLikeButton() {
         var configuration = UIButton.Configuration.filled()
-        configuration.image = UIImage(systemName: "hand.thumbsup") // Используем палец вверх
+        configuration.image = UIImage(systemName: "hand.thumbsup")
         configuration.title = "\(photoModel.likesCount)"
         configuration.imagePadding = 4
         configuration.baseForegroundColor = isfavorite ? UIColor.white : UIColor.systemTeal
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
-
+        
         likeButton.configuration = configuration
         likeButton.backgroundColor = isfavorite ? UIColor.systemPink : UIColor.clear
         likeButton.clipsToBounds = true
         likeButton.layer.cornerRadius = 8
-
-        // Установка фиксированного размера для кнопки
+        
         likeButton.translatesAutoresizingMaskIntoConstraints = false
         likeButton.widthAnchor.constraint(equalToConstant: 100).isActive = true
         likeButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
         
         let gesture = UITapGestureRecognizer(target: self, action: #selector(likeTap))
         likeButton.addGestureRecognizer(gesture)
-
-        // Добавление действия для нажатия на кнопку
-//        likeButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
+        
     }
     
     private func setupViews() {
@@ -107,56 +101,49 @@ final class PhotoDetailsVC: UIViewController {
         scrollView.addSubview(locationLabel)
         scrollView.addSubview(downloadsLabel)
         scrollView.addSubview(likeButton)
-//        scrollView.addSubview(infoLabel)
-//        scrollView.addSubview(labelDate)
         
         NSLayoutConstraint.activate([
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
-            
-            authorNameLabel.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 4),
-            authorNameLabel.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -4),
-            authorNameLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            authorNameLabel.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            
-            shadowView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            shadowView.topAnchor.constraint(equalTo: authorNameLabel.bottomAnchor, constant: 16),
-            shadowView.widthAnchor.constraint(equalToConstant: 300),
-            shadowView.heightAnchor.constraint(equalToConstant: 300 * photoModel.aspectRatio),
-            
-            imageView.leadingAnchor.constraint(equalTo: shadowView.leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: shadowView.trailingAnchor),
-            imageView.topAnchor.constraint(equalTo: shadowView.topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: shadowView.bottomAnchor),
-            
-            dateLabel.leadingAnchor.constraint(equalTo: authorNameLabel.leadingAnchor, constant: 4),
-            dateLabel.trailingAnchor.constraint(equalTo: authorNameLabel.trailingAnchor, constant: -4),
-            dateLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            dateLabel.topAnchor.constraint(equalTo: shadowView.bottomAnchor, constant: 16),
-            
-            locationLabel.leadingAnchor.constraint(equalTo: dateLabel.leadingAnchor, constant: 4),
-            locationLabel.trailingAnchor.constraint(equalTo: dateLabel.trailingAnchor, constant: -4),
-            locationLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            locationLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 8),
-            
-            downloadsLabel.leadingAnchor.constraint(equalTo: locationLabel.leadingAnchor, constant: 4),
-            downloadsLabel.trailingAnchor.constraint(equalTo: locationLabel.trailingAnchor, constant: -4),
-            downloadsLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            downloadsLabel.topAnchor.constraint(equalTo: locationLabel.bottomAnchor, constant: 8),
-            
-            likeButton.widthAnchor.constraint(equalToConstant: 100),
-            likeButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            likeButton.topAnchor.constraint(equalTo: downloadsLabel.bottomAnchor, constant: 8),
-            
-//            infoLabel.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 4),
-//            infoLabel.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -4),
-//            infoLabel.topAnchor.constraint(equalTo: likeButton.bottomAnchor, constant: 8),
-//            infoLabel.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -20),
-        ])
+               scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+               scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+               scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+               scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+               
+               authorNameLabel.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
+               authorNameLabel.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
+               authorNameLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+               authorNameLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 16),
+               
+               shadowView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
+               shadowView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
+               shadowView.topAnchor.constraint(equalTo: authorNameLabel.bottomAnchor, constant: 16),
+               shadowView.heightAnchor.constraint(equalTo: shadowView.widthAnchor, multiplier: photoModel.aspectRatio),
+               
+               imageView.leadingAnchor.constraint(equalTo: shadowView.leadingAnchor),
+               imageView.trailingAnchor.constraint(equalTo: shadowView.trailingAnchor),
+               imageView.topAnchor.constraint(equalTo: shadowView.topAnchor),
+               imageView.bottomAnchor.constraint(equalTo: shadowView.bottomAnchor),
+               
+               dateLabel.leadingAnchor.constraint(equalTo: authorNameLabel.leadingAnchor),
+               dateLabel.trailingAnchor.constraint(equalTo: authorNameLabel.trailingAnchor),
+               dateLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+               dateLabel.topAnchor.constraint(equalTo: shadowView.bottomAnchor, constant: 16),
+               
+               locationLabel.leadingAnchor.constraint(equalTo: dateLabel.leadingAnchor),
+               locationLabel.trailingAnchor.constraint(equalTo: dateLabel.trailingAnchor),
+               locationLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+               locationLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 8),
+               
+               downloadsLabel.leadingAnchor.constraint(equalTo: locationLabel.leadingAnchor),
+               downloadsLabel.trailingAnchor.constraint(equalTo: locationLabel.trailingAnchor),
+               downloadsLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+               downloadsLabel.topAnchor.constraint(equalTo: locationLabel.bottomAnchor, constant: 8),
+               
+               likeButton.widthAnchor.constraint(equalToConstant: 100),
+               likeButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+               likeButton.topAnchor.constraint(equalTo: downloadsLabel.bottomAnchor, constant: 16),
+               likeButton.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -16) // Добавляем отступ от нижнего края scrollView
+           ])
     }
-    
     
     private func downloadImage(with url: URL?) {
         guard let url = url else {
@@ -181,49 +168,31 @@ final class PhotoDetailsVC: UIViewController {
     }
     
     private func configure() {
-        authorNameLabel.text = photoModel.authorName
+        authorNameLabel.text = "Автор: \(photoModel.authorName )"
         
-        // Загружаем изображение без использования фреймворка
         if let imageURL = photoModel.smallImage {
             downloadImage(with: imageURL)
         } else {
             imageView.image = nil
         }
         
-        dateLabel.text = photoModel.createdDate
-        locationLabel.text = photoModel.location
+        dateLabel.text = "Дата создания: \(photoModel.createdDate )"
+        locationLabel.text = "Город: \(photoModel.location )"
         
         if photoModel.downloadsCount != 0 {
-            downloadsLabel.text = "\(photoModel.downloadsCount) downloads"
+            downloadsLabel.text = "Загрузок: \(photoModel.downloadsCount)"
             downloadsLabel.isHidden = false
         } else {
             downloadsLabel.isHidden = true
         }
     }
     
-//    @objc func saveImage(gesture: UILongPressGestureRecognizer) {
-//        guard let image = imageView.image else { return }
-//        if gesture.state == .began {
-//            UIImageWriteToSavedPhotosAlbum(image, self,
-//                                           #selector(showAlert(_: didFinishSavingWithError: contextInfo:)), nil)
-//        }
-//    }
-    
-//    private func setupSaveGesture() {
-//        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(saveImage))
-//        gesture.minimumPressDuration = 0.5
-//        imageView.addGestureRecognizer(gesture)
-//    }
-    
     private func showFavoriteStatusAlert() {
-        // Создаем сообщение для UIAlertController
         let message = isfavorite ? "Фото добавлено в избранное" : "Фото удалено из избранного"
-
-        // Создаем UIAlertController
-        let alertController = UIAlertController(title: "Успех", message: message, preferredStyle: .alert)
+        let title = isfavorite ? "Успех" : "Печаль"
+        
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "ОК", style: .default, handler: nil))
-
-        // Показываем UIAlertController
         present(alertController, animated: true, completion: nil)
     }
 }
