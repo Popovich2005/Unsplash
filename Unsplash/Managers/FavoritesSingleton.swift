@@ -30,4 +30,4 @@ final class Favorites {
         favorites = createPhotos.loadPhoto()
     }
 }
-аааа
+
