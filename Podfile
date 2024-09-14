@@ -6,5 +6,10 @@ target 'Unsplash' do
   use_frameworks!
 
   # Pods for Unsplash
+  
+  pod 'Alamofire'
+  
+  pod 'AlamofireImage', '~> 4.1'
+
 
 end

@@ -6,15 +6,17 @@
 //
 
 import UIKit
+import Alamofire
+import AlamofireImage
 
 final class PhotoCell: UICollectionViewCell {
     
     static let identifier = "PhotoCell"
     
     private let imageView: UIImageView = UIImageView()
-
+    
     private var currentImageURL: String?
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupImageView()
@@ -25,14 +27,32 @@ final class PhotoCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func setupImageView() {
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.contentMode = .scaleToFill
-            imageView.layer.borderWidth = 1
-            imageView.layer.cornerRadius = 8
-            imageView.layer.masksToBounds = true
+    func downloadImage(with urlString: String) {
+        currentImageURL = urlString
+        self.imageView.image = nil
+        guard let url = URL(string: urlString) else { return }
+        
+        AF.request(url).responseImage { [weak self] response in
+            guard let self = self else { return }
+            
+            if self.currentImageURL == urlString {
+                if let image = response.value {
+                    DispatchQueue.main.async {
+                        self.imageView.image = image
+                    }
+                }
+            }
         }
-
+    }
+    
+    private func setupImageView() {
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleToFill
+        imageView.layer.borderWidth = 1
+        imageView.layer.cornerRadius = 8
+        imageView.layer.masksToBounds = true
+    }
+    
     private func setupCell() {
         contentView.addSubview(imageView)
         
@@ -45,29 +65,5 @@ final class PhotoCell: UICollectionViewCell {
             imageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -padding)
         ])
     }
-
-    func downloadImage(with urlString: String) {
-            // Сохраняем текущий URL
-            currentImageURL = urlString
-            
-            // Очищаем старое изображение
-            self.imageView.image = nil
-            
-            // Проверяем корректность URL
-            guard let url = URL(string: urlString) else { return }
-            
-            // Асинхронная загрузка изображения
-            URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
-                guard let self = self, let data = data, let image = UIImage(data: data) else { return }
-                
-                // Проверяем, не изменилась ли URL картинки
-                if self.currentImageURL == urlString {
-                    DispatchQueue.main.async {
-                        self.imageView.image = image
-                    }
-                }
-            }.resume()
-        }
-    }
+}
     
-

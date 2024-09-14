@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import Alamofire
+import AlamofireImage
 
 class FavoritePhotoCell: UITableViewCell {
     
@@ -57,30 +59,28 @@ class FavoritePhotoCell: UITableViewCell {
     
     func downloadImage(with url: URL?) {
         guard let url = url else {
-            image.image = nil // Если URL отсутствует, очищаем изображение
+            image.image = nil
             return
         }
-        
-        // Сбросим текущее изображение, чтобы избежать отображения старого
         image.image = nil
-        
-        // Загрузка изображения
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self, let data = data, error == nil, let image = UIImage(data: data) else {
-                return
-            }
+        AF.request(url).responseData { [weak self] response in
+            guard let self = self else { return }
             
-            // Обновление пользовательского интерфейса должно происходить в главном потоке
-            DispatchQueue.main.async {
-                self.image.image = image
+            switch response.result {
+            case .success(let data):
+                if let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self.image.image = image
+                    }
+                }
+            case .failure(let error):
+                print("Error loading image: \(error)")
             }
-        }.resume() // Запускаем задачу
+        }
     }
     
     func configure(with model: DetailsPhotoModel) {
         self.photoModel = model
-
-        // Загружаем изображение без использования фреймворка
         if let imageURL = photoModel?.smallImage {
             downloadImage(with: imageURL)
         } else {
