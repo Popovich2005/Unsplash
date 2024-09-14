@@ -14,7 +14,15 @@ final class PhotosVC: UIViewController {
     private var networkService = NetworkService()
     private var isLoading = false
     private var query: String = ""
-    private let caretaker = CreatePhotos()
+//    private let caretaker = CreatePhotos()
+    private var searchQuery: String = "" {
+            didSet {
+                if searchQuery != query {
+                    query = searchQuery
+                    getSearchPhotos(page: 1)
+                }
+            }
+        }
     private let factory = PhotoCellBuilder()
     private var models: [DetailsPhotoModel] = [] {
         didSet {
@@ -53,11 +61,19 @@ final class PhotosVC: UIViewController {
         return searchBar
     }()
     
+    private let tapGesture: UITapGestureRecognizer = {
+        let gesture = UITapGestureRecognizer(target: PhotosVC.self, action: #selector(hideKeyboard))
+            gesture.cancelsTouchesInView = false
+            return gesture
+        }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        addNotifications()
+//        addNotifications()
         setupCollectionView()
+        setupSearchBar()
+        addKeyboardObservers()
         setupActivityIndicator()
         getRandomPhotos(completion: {})
         
@@ -68,11 +84,12 @@ final class PhotosVC: UIViewController {
     }
     
     deinit {
-        removeNotifications()
+        removeKeyboardObservers()
     }
 }
 
 extension PhotosVC {
+    
     private func setupCollectionView() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: UICollectionViewFlowLayout())
         guard let collectionView = collectionView else { return }
@@ -84,70 +101,95 @@ extension PhotosVC {
         collectionView.register(PhotoCell.self, forCellWithReuseIdentifier: PhotoCell.identifier)
         
         view.addSubview(collectionView)
-        view.addSubview(searchBar)
+        //        view.addSubview(searchBar)
         
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.prefetchDataSource = self
-        searchBar.delegate = self
+        //        searchBar.delegate = self
         
-        NSLayoutConstraint.activate([
-            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
-            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
-            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            searchBar.heightAnchor.constraint(equalToConstant: 40),
+    }
+        private func setupSearchBar() {
+            view.addSubview(searchBar)
             
-            collectionView.leadingAnchor.constraint(equalTo: searchBar.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: searchBar.trailingAnchor),
-            collectionView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 4),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
+            searchBar.delegate = self
+            
+            NSLayoutConstraint.activate([
+                searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
+                searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -4),
+                searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+                searchBar.heightAnchor.constraint(equalToConstant: 40),
+                
+                collectionView?.leadingAnchor.constraint(equalTo: searchBar.leadingAnchor),
+                collectionView?.trailingAnchor.constraint(equalTo: searchBar.trailingAnchor),
+                collectionView?.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 4),
+                collectionView?.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ].compactMap { $0 })
     }
     
     @objc private func hideKeyboard() {
         view.endEditing(true)
     }
+    private func addKeyboardObservers() {
+           NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+           NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+       }
     
-    @objc private func keyboardWasShown(notification: Notification) {
-        addTapOnView()
-    }
+    private func removeKeyboardObservers() {
+           NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+           NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+       }
     
-    @objc private func keyboardWillBeHidden(notification: Notification) {
-        view.gestureRecognizers?.forEach(view.removeGestureRecognizer)
-    }
+    @objc private func keyboardWillShow(_ notification: Notification) {
+            // Handle keyboard showing if needed
+        }
     
-    private func addTapOnView() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.hideKeyboard))
-        view.addGestureRecognizer(tapGesture)
-    }
+    @objc private func keyboardWillHide(_ notification: Notification) {
+           // Handle keyboard hiding if needed
+       }
     
-    private func addNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(self.keyboardWasShown),
-            name: UIResponder.keyboardWillShowNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(self.keyboardWillBeHidden),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-    }
     
-    private func removeNotifications() {
-        NotificationCenter.default.removeObserver(
-            self,
-            name: UIResponder.keyboardWillShowNotification,
-            object: nil
-        )
-        NotificationCenter.default.removeObserver(
-            self,
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-    }
+    
+//    @objc private func keyboardWasShown(notification: Notification) {
+//        addTapOnView()
+//    }
+//    
+//    @objc private func keyboardWillBeHidden(notification: Notification) {
+//        view.gestureRecognizers?.forEach(view.removeGestureRecognizer)
+//    }
+//    
+//    private func addTapOnView() {
+//        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.hideKeyboard))
+//        view.addGestureRecognizer(tapGesture)
+//    }
+//    
+//    private func addNotifications() {
+//        NotificationCenter.default.addObserver(
+//            self,
+//            selector: #selector(self.keyboardWasShown),
+//            name: UIResponder.keyboardWillShowNotification,
+//            object: nil
+//        )
+//        NotificationCenter.default.addObserver(
+//            self,
+//            selector: #selector(self.keyboardWillBeHidden),
+//            name: UIResponder.keyboardWillHideNotification,
+//            object: nil
+//        )
+//    }
+//    
+//    private func removeNotifications() {
+//        NotificationCenter.default.removeObserver(
+//            self,
+//            name: UIResponder.keyboardWillShowNotification,
+//            object: nil
+//        )
+//        NotificationCenter.default.removeObserver(
+//            self,
+//            name: UIResponder.keyboardWillHideNotification,
+//            object: nil
+//        )
+//    }
     
     
     private func getRandomPhotos(completion: @escaping () -> Void) {
@@ -169,7 +211,7 @@ extension PhotosVC {
     }
     
     
-    private func getSearchPhotos() {
+    private func getSearchPhotos(page: Int = 1) {
         networkService.fetchSearchPhoto(query: self.query) { [weak self] result in
             guard let self = self else { return }
             switch result {
@@ -279,3 +321,4 @@ extension PhotosVC: UICollectionViewDataSourcePrefetching {
         }
     }
 }
+

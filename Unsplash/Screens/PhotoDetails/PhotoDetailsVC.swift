@@ -73,21 +73,6 @@ final class PhotoDetailsVC: UIViewController {
         navigationItem.setLeftBarButton(button, animated: true)
     }
     
-//    private func setupLikeButton() {
-//        likeButton.setImage(isfavorite ? UIImage(systemName: "heart.fill") : UIImage(systemName: "heart"),
-//                            for: .normal)
-//        likeButton.imageView?.tintColor = isfavorite ? UIColor.white : UIColor.systemTeal
-//        likeButton.setTitle("\(photoModel.likesCount)", for: .normal)
-//        likeButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 4)
-//        likeButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
-//        likeButton.backgroundColor = isfavorite ? UIColor.systemPink : UIColor.clear
-//        likeButton.setTitleColor(isfavorite ? UIColor.white : UIColor.systemTeal, for: .normal)
-//        likeButton.clipsToBounds = true
-//        likeButton.layer.cornerRadius = 8
-//        let gesture = UITapGestureRecognizer(target: self, action: #selector(likeTap))
-//        likeButton.addGestureRecognizer(gesture)
-//    }
-    
     private func setupLikeButton() {
         var configuration = UIButton.Configuration.filled()
         configuration.image = UIImage(systemName: "hand.thumbsup") // Используем палец вверх

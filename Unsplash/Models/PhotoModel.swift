@@ -9,6 +9,8 @@ import Foundation
 
 struct ResultsPhotosModel: Codable {
     let results: [PhotoModel]?
+    let totalPages: Int?
+    let total: Int?
 }
 
 struct PhotoModel: Codable {

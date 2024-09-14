@@ -18,11 +18,11 @@ class MainTabBarVC: UITabBarController {
         tabBar.isTranslucent = true
         let photosVC = PhotosVC()
         let favoritesVC = FavoritesVC()
-        let photosImage = UIImage(systemName: "photo.fill.on.rectangle.fill") ?? UIImage()
-        let heartImage = UIImage(systemName: "heart") ?? UIImage()
+        let photosImage = UIImage(systemName: "photo.fill") ?? UIImage()
+        let heartImage = UIImage(systemName: "star.fill") ?? UIImage()
         
         viewControllers = [
-            generateNavigationController(rootViewController: photosVC, title: "Случайные фотографии",
+            generateNavigationController(rootViewController: photosVC, title: "Фотографии",
                                          image: photosImage),
             generateNavigationController(rootViewController: favoritesVC, title: "Избранное", image: heartImage),
         ]
