@@ -11,6 +11,9 @@ final class PhotoCell: UICollectionViewCell {
     
     static let identifier = "PhotoCell"
     
+    private var currentImageURL: String?
+
+    
     private let imageView: UIImageView = UIImageView()
     
     override init(frame: CGRect) {
@@ -46,25 +49,51 @@ final class PhotoCell: UICollectionViewCell {
         ])
     }
     
-    func downloadImage(with url: URL?) {
-        guard let url = url else {
-            imageView.image = nil // Если URL отсутствует, очищаем изображение
-            return
-        }
-        
-        // Сбросим текущее изображение, чтобы избежать отображения старого
-        imageView.image = nil
-        
-        // Загрузка изображения
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self, let data = data, error == nil, let image = UIImage(data: data) else {
-                return
-            }
+//    func downloadImage(with url: URL?) {
+//        guard let url = url else {
+//            imageView.image = nil // Если URL отсутствует, очищаем изображение
+//            return
+//        }
+//        
+//        // Сбросим текущее изображение, чтобы избежать отображения старого
+//        imageView.image = nil
+//        
+//        // Загрузка изображения
+//        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+//            guard let self = self, let data = data, error == nil, let image = UIImage(data: data) else {
+//                return
+//            }
+//            
+//            // Обновление пользовательского интерфейса должно происходить в главном потоке
+//            DispatchQueue.main.async {
+//                self.imageView.image = image
+//            }
+//        }.resume() // Запускаем задачу
+//    }
+    
+    
+    func downloadImage(with urlString: String) {
+            // Сохраняем текущий URL
+            currentImageURL = urlString
             
-            // Обновление пользовательского интерфейса должно происходить в главном потоке
-            DispatchQueue.main.async {
-                self.imageView.image = image
-            }
-        }.resume() // Запускаем задачу
+            // Очищаем старое изображение
+            self.imageView.image = nil
+            
+            // Проверяем корректность URL
+            guard let url = URL(string: urlString) else { return }
+            
+            // Асинхронная загрузка изображения
+            URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+                guard let self = self, let data = data, let image = UIImage(data: data) else { return }
+                
+                // Проверяем, не изменилась ли URL картинки
+                if self.currentImageURL == urlString {
+                    DispatchQueue.main.async {
+                        self.imageView.image = image
+                    }
+                }
+            }.resume()
+        }
     }
-}
+    
+

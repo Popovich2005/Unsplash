@@ -9,7 +9,7 @@ import UIKit
 
 final class PhotosVC: UIViewController {
     
-
+    
     private var collectionView: UICollectionView?
     private var networkService = NetworkService()
     private var isLoading = false
@@ -23,6 +23,20 @@ final class PhotosVC: UIViewController {
             }
         }
     }
+    
+    
+    
+    
+    
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+    
+    
+    
     private let itemsPerRow: CGFloat = 3
     private let flowLayout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
@@ -44,7 +58,13 @@ final class PhotosVC: UIViewController {
         view.backgroundColor = .systemBackground
         addNotifications()
         setupCollectionView()
+        setupActivityIndicator()
         getRandomPhotos(completion: {})
+        
+        activityIndicator.startAnimating()
+        getRandomPhotos {
+            self.activityIndicator.stopAnimating()
+        }
     }
     
     deinit {
@@ -129,35 +149,51 @@ extension PhotosVC {
         )
     }
     
+    
     private func getRandomPhotos(completion: @escaping () -> Void) {
-//        networkService.fetchPhotos(count: 20) { [weak self] result in
-        networkService.fetchPhotos(page: 1) { [weak self] result in
+        networkService.fetchPhotos { [weak self] result in
             guard let self = self else { return }
             switch result {
-                case .failure:
-                    print("GET RANDOM PHOTOS ERROR")
-                case .success(let models):
-                    self.factory.buildCellsModels(from: models) { models in
+            case .failure:
+                print("GET RANDOM PHOTOS ERROR")
+                completion() // Завершаем запрос в случае ошибки, чтобы остановить индикаторы загрузки
+            case .success(let models):
+                self.factory.buildCellsModels(from: models) { models in
+                    DispatchQueue.main.async {
                         self.models.append(contentsOf: models)
+                        completion() // Завершаем после успешной загрузки
                     }
+                }
             }
         }
     }
+    
     
     private func getSearchPhotos() {
         networkService.fetchSearchPhoto(query: self.query) { [weak self] result in
             guard let self = self else { return }
             switch result {
-                case .failure:
-                    print("GET SEARCH PHOTOS ERROR")
-                case .success(let models):
-                    self.factory.buildCellsModels(from: models) { models in
-                        self.models = models
+            case .failure:
+                print("GET SEARCH PHOTOS ERROR")
+            case .success(let models):
+                self.factory.buildCellsModels(from: models) { models in
+                    DispatchQueue.main.async {
+                        self.models = models // Полностью обновляем массив моделей
                     }
+                }
             }
         }
     }
     
+    
+    private func setupActivityIndicator() {
+        view.addSubview(activityIndicator)
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        activityIndicator.startAnimating()
+    }
 }
 
 extension PhotosVC: UICollectionViewDelegate, UICollectionViewDataSource {
@@ -165,13 +201,22 @@ extension PhotosVC: UICollectionViewDelegate, UICollectionViewDataSource {
         models.count
     }
     
+    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.identifier, for: indexPath) as? PhotoCell
         else { return UICollectionViewCell() }
-        let url = models[indexPath.item].smallImage
-        cell.downloadImage(with: url)
+        
+        // Получаем URL изображения из модели и преобразуем его в строку
+        let urlString = models[indexPath.item].smallImage?.absoluteString ?? ""
+        
+        // Перед загрузкой нового изображения, очищаем старое
+        cell.downloadImage(with: urlString)
+        
         return cell
     }
+    
+    
+    
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let infoVC = PhotoDetailsVC(photoModel: models[indexPath.item])
@@ -182,16 +227,16 @@ extension PhotosVC: UICollectionViewDelegate, UICollectionViewDataSource {
 }
 
 extension PhotosVC: UICollectionViewDelegateFlowLayout {
-
+    
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let paddingSpace = flowLayout.sectionInset.left * 2 + flowLayout.minimumInteritemSpacing * (itemsPerRow )
+        let paddingSpace = flowLayout.sectionInset.left + flowLayout.sectionInset.right + (flowLayout.minimumInteritemSpacing * (itemsPerRow - 1))
         let availableWidth = collectionView.bounds.width - paddingSpace
         let widthPerItem = availableWidth / itemsPerRow
-        
         return CGSize(width: widthPerItem, height: widthPerItem)
     }
+    
     
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
@@ -221,12 +266,15 @@ extension PhotosVC: UISearchBarDelegate {
 }
 
 extension PhotosVC: UICollectionViewDataSourcePrefetching {
+ 
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         guard let maxIndex = indexPaths.last?.item else { return }
         if maxIndex > models.count - 7, !isLoading {
             isLoading = true
             getRandomPhotos {
-                self.isLoading = false
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
             }
         }
     }
