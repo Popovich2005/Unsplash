@@ -9,27 +9,7 @@ import UIKit
 
 final class PhotosVC: UIViewController {
     
-    
-    private var collectionView: UICollectionView?
-    private var networkService = NetworkService()
-    private var isLoading = false
-    private var query: String = ""
-//    private var searchQuery: String = "" {
-//            didSet {
-//                if searchQuery != query {
-//                    query = searchQuery
-//                    getSearchPhotos(page: 1)
-//                }
-//            }
-//        }
     private let factory = PhotoCellBuilder()
-    private var photos: [DetailsPhotoModel] = [] {
-        didSet {
-            DispatchQueue.main.async {
-                self.collectionView?.reloadData()
-            }
-        }
-    }
     
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
@@ -63,6 +43,18 @@ final class PhotosVC: UIViewController {
             gesture.cancelsTouchesInView = false
             return gesture
         }()
+    
+    private var collectionView: UICollectionView?
+    private var networkService = NetworkService()
+    private var isLoading = false
+    private var query: String = ""
+    private var photos: [DetailsPhotoModel] = [] {
+        didSet {
+            DispatchQueue.main.async {
+                self.collectionView?.reloadData()
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -157,7 +149,6 @@ extension PhotosVC {
             }
         }
     }
-    
     
     private func getSearchPhotos(page: Int = 1) {
         networkService.fetchSearchPhoto(query: self.query) { [weak self] result in

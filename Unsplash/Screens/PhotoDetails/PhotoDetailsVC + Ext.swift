@@ -21,7 +21,6 @@ extension PhotoDetailsVC {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 3
-        label.text = "FirstName SecondName"
         label.textAlignment = .center
         label.font = UIFont.systemFont(ofSize: 22, weight: .medium)
         return label

@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import AlamofireImage
+import Alamofire
 
 final class PhotoDetailsVC: UIViewController {
     
@@ -141,30 +143,30 @@ final class PhotoDetailsVC: UIViewController {
                likeButton.widthAnchor.constraint(equalToConstant: 100),
                likeButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
                likeButton.topAnchor.constraint(equalTo: downloadsLabel.bottomAnchor, constant: 16),
-               likeButton.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -16) // Добавляем отступ от нижнего края scrollView
+               likeButton.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -16)
            ])
     }
     
-    private func downloadImage(with url: URL?) {
+    func downloadImage(with url: URL?) {
         guard let url = url else {
-            imageView.image = nil // Если URL отсутствует, очищаем изображение
+            imageView.image = nil
             return
         }
-        
-        // Сбросим текущее изображение, чтобы избежать отображения старого
         imageView.image = nil
-        
-        // Загрузка изображения
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let self = self, let data = data, error == nil, let image = UIImage(data: data) else {
-                return
-            }
+        AF.request(url).responseData { [weak self] response in
+            guard let self = self else { return }
             
-            // Обновление пользовательского интерфейса должно происходить в главном потоке
-            DispatchQueue.main.async {
-                self.imageView.image = image
+            switch response.result {
+            case .success(let data):
+                if let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self.imageView.image = image
+                    }
+                }
+            case .failure(let error):
+                print("Error loading image: \(error)")
             }
-        }.resume() // Запускаем задачу
+        }
     }
     
     private func configure() {
